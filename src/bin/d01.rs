@@ -1,49 +1,16 @@
 use {
     anyhow::{anyhow, Context},
-    std::{
-        convert::TryInto,
-        io::{stdin, Read},
-    },
-    structopt::StructOpt,
+    std::convert::TryFrom,
 };
 
-#[derive(Debug, StructOpt)]
-enum CliArgs {
-    Part1,
-    Part2,
-}
-
-fn main() -> anyhow::Result<()> {
-    let args = CliArgs::from_args();
-    let stdin = {
-        let mut buf = String::new();
-        stdin()
-            .read_to_string(&mut buf)
-            .context("failed to read stdin as UTF-8")?;
-        buf
-    };
-
-    match args {
-        CliArgs::Part1 => part_1(&stdin).map(
-            |Part1Answer {
-                e1,
-                e2,
-                sum,
-                product,
-            }| {
-                println!("{} + {} = {}", e1, e2, sum);
-                println!("{} x {} = {:?}", e1, e2, product);
-            },
-        ),
-        CliArgs::Part2 => todo!("I haven't solved part 1 yet!"),
-    }
-}
+#[cfg(not(test))]
+compile_error!("Only `cargo test` makes sense for this program.");
 
 const SUM_TARGET: u32 = 2020;
 
 #[derive(Debug)]
 struct Answer {
-    entries: Vec<u32>,
+    entries: Vec<(usize, u32)>,
     sum: u32,
     product: u32,
 }
@@ -66,64 +33,101 @@ fn find_2020_sum_constituents(input: &str, num_entries: usize) -> anyhow::Result
                 }))
             }
         })
-    .collect::<Result<Vec<_>, _>>()
+        .collect::<Result<Vec<_>, _>>()
         .context("failed to parse input")?;
     if num_entries > expense_report_entries.len() || num_entries == 0 {
         return Ok(None);
     }
 
-    let mut entries_indices = (0..num_entries)
-        .map(|idx| (idx, expense_report_entries[idx]))
-        .collect::<Vec<_>>();
-
-    loop {
-        if entries_indices
-            .iter()
-                .copied()
-                .map(|(idx, entry)| entry)
-                .try_fold(0u32, |sum, entry| {
-                    sum.checked_add(entry).filter(|&s| s <= SUM_TARGET)
-                })
-        .is_some()
-        {
-
-        }
-
-        let carry_idx = entries_indices.iter().copied().enumerate().rev().find(|&(idx, _entry)| idx < expense_report_entries.len());
-        entries_indices[carry_idx] += 1;
-        entries_indices.iter_mut().skip(carry_idx + 1).
-    }
-
-    expense_report_entries
-        .iter()
-        .copied()
-        .enumerate()
-        .find_map(|(idx, e1)| {
+    let mut entries_stack: Vec<(usize, u32)> = {
+        let mut entries = Vec::with_capacity(num_entries);
+        entries.extend(
             expense_report_entries
                 .iter()
                 .copied()
-                .skip(idx + 1)
-                .find_map(|e2| {
-                    e1.checked_add(e2)
-                        .filter(|&sum| sum == SUM_TARGET)
-                        .map(|sum| (e1, e2, sum))
-                })
-        })
-    .and_then(|(e1, e2, sum)| {
-        let product = e1.checked_mul(e2).with_context(|| anyhow!("failed "))?;
-        Ok(Part1Answer {
-            e1,
-            e2,
-            sum,
-            product,
-        })
-    })
+                .take(num_entries - 1)
+                .enumerate(),
+        );
+        entries
+    };
+
+    loop {
+        let checked_add = |sum: u32, entry_idx, entry| {
+            let new_sum = sum.checked_add(entry);
+            if new_sum.is_none() {
+                eprintln!(
+                    "warning: addition overflowed for {:?} ({}) + {:?}",
+                    entries_stack,
+                    sum,
+                    (entry_idx, entry)
+                )
+            }
+            new_sum.filter(|&s| s <= SUM_TARGET)
+        };
+
+        if let Some(last_entry) = entries_stack
+            .iter()
+            .copied()
+            .try_fold((0usize, 0u32), |(_idx, sum), (idx, entry)| {
+                checked_add(sum, idx, entry).map(|sum| (idx, sum))
+            })
+            .and_then(|(idx, semifinal_sum)| {
+                expense_report_entries
+                    .iter()
+                    .copied()
+                    .enumerate()
+                    .skip(idx)
+                    .find_map(|(idx, entry)| {
+                        checked_add(semifinal_sum, idx, entry)
+                            .filter(|&sum| sum == SUM_TARGET)
+                            .map(|_sum| (idx, entry))
+                    })
+            })
+        {
+            entries_stack.push(last_entry);
+            break Ok(Some(Answer {
+                product: entries_stack
+                    .iter()
+                    .copied()
+                    .fold(1, |product: u32, (_idx, entry)| -> u32 {
+                        product.checked_mul(entry).unwrap()
+                    }),
+                entries: entries_stack,
+                sum: SUM_TARGET,
+            }));
+        }
+
+        match entries_stack
+            .iter()
+            .copied()
+            .map(|(idx, _entry)| idx)
+            .enumerate()
+            .rev()
+            .zip(1..)
+            .find_map(|((stack_idx, entry_idx), num_digits_carried)| {
+                if num_digits_carried + entry_idx < expense_report_entries.len() {
+                    Some((stack_idx, entry_idx))
+                } else {
+                    None
+                }
+            }) {
+            None => break Ok(None),
+            Some((stack_idx, entry_idx)) => {
+                entries_stack.iter_mut().skip(stack_idx).zip(1..).for_each(
+                    |(stack_entry, offset)| {
+                        let new_entry_idx = entry_idx + offset;
+                        *stack_entry = (new_entry_idx, expense_report_entries[new_entry_idx]);
+                    },
+                );
+            }
+        }
+    }
 }
 
 #[derive(Debug, Eq, PartialEq)]
 struct Part1Answer {
-    e1: u32,
-    e2: u32,
+    e1: (usize, u32),
+    e2: (usize, u32),
     sum: u32,
     product: u32,
 }
@@ -133,101 +137,120 @@ fn part_1(input: &str) -> anyhow::Result<Part1Answer> {
         .and_then(|ans| {
             ans.with_context(|| anyhow!("failed to find entry pair that sums to {}", SUM_TARGET))
         })
-    .map(
-        |Answer {
-            entries,
-            sum,
-            product,
-        }| {
-            let [e1, e2] = entries.try_into().unwrap();
-            Part1Answer {
-                e1,
-                e2,
-                sum,
-                product,
-            }
-        },
-    )
+        .map(
+            |Answer {
+                 entries,
+                 sum,
+                 product,
+             }| {
+                let [e1, e2] = <[(usize, u32); 2]>::try_from(entries).unwrap();
+                Part1Answer {
+                    e1,
+                    e2,
+                    sum,
+                    product,
+                }
+            },
+        )
 }
 
 #[derive(Debug, Eq, PartialEq)]
 struct Part2Answer {
-    e1: u32,
-    e2: u32,
-    e3: u32,
+    e1: (usize, u32),
+    e2: (usize, u32),
+    e3: (usize, u32),
     sum: u32,
     product: u32,
 }
 
 fn part_2(input: &str) -> anyhow::Result<Part2Answer> {
-    find_2020_sum_constituents(input, 3).map(
-        |Answer {
-            entries,
-            sum,
-            product,
-        }| {
-            let [e1, e2, e3] = entries.try_into().unwrap();
+    find_2020_sum_constituents(input, 3)
+        .and_then(|ans| {
+            ans.with_context(|| anyhow!("failed to find entry triplet that sums to {}", SUM_TARGET))
+        })
+        .map(
+            |Answer {
+                 entries,
+                 sum,
+                 product,
+             }| {
+                let [e1, e2, e3] = <[(usize, u32); 3]>::try_from(entries).unwrap();
+                Part2Answer {
+                    e1,
+                    e2,
+                    e3,
+                    sum,
+                    product,
+                }
+            },
+        )
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    const EXAMPLE: &str = "
+        1721
+        979
+        366
+        299
+        675
+        1456
+        ";
+    const INPUT: &str = include_str!("d01.txt");
+
+    #[test]
+    fn d01p1_sample() {
+        assert_eq!(
+            part_1(EXAMPLE).unwrap(),
             Part1Answer {
-                e1,
-                e2,
-                e3,
-                sum,
-                product,
-            }
-        },
-    )
-}
+                e1: (0, 1721),
+                e2: (3, 299),
+                sum: 2020,
+                product: 514579,
+            },
+        );
+    }
 
-const EXAMPLE: &str = "
-            1721
-            979
-            366
-            299
-            675
-            1456
-            ";
+    #[test]
+    fn d01p1_answer() {
+        assert_eq!(
+            part_1(INPUT).unwrap(),
+            Part1Answer {
+                e1: (68, 1751),
+                e2: (140, 269),
+                sum: 2020,
+                product: 471019,
+            },
+        );
+    }
 
-#[test]
-            fn d01p1_sample() {
-                assert_eq!(
-                    part_1(EXAMPLE).unwrap(),
-                    Part1Answer {
-                        e1: 1721,
-                        e2: 299,
-                        sum: 2020,
-                        product: 514579,
-                    }
-                )
-            }
+    #[test]
+    fn d01p2_sample() {
+        assert_eq!(
+            part_2(EXAMPLE).unwrap(),
+            Part2Answer {
+                e1: (1, 979),
+                e2: (2, 366),
+                e3: (4, 675),
+                sum: 2020,
+                product: 241861950,
+            },
+        );
+    }
 
-#[test]
-fn d01p1_answer() {
-    assert_eq!(
-        part_1(include_str!("d01.txt")).unwrap(),
-        Part1Answer {
-            e1: 1751,
-            e2: 269,
-            sum: 2020,
-            product: 471019,
-        }
-    );
-}
-
-#[test]
-fn d01p2_sample() {
-    assert_eq!(
-        part_2(EXAMPLE).unwrap(),
-        Part2Answer {
-            e1: 979,
-            e2: 366,
-            e3: 675,
-            sum: 2020,
-            product: 241861950,
-        }
-    )
-}
-
-#[test]
-fn d01p2_answer() {
-    todo!();
+    #[test]
+    fn d01p2_answer() {
+        assert_eq!(
+            part_2(INPUT).unwrap(),
+            Part2Answer {
+                e1: (62, 1442),
+                e2: (105, 396),
+                e3: (150, 182),
+                sum: 2020,
+                product: 103927824,
+            },
+        );
+    }
 }
