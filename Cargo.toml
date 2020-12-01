@@ -1,0 +1,9 @@
+[package]
+name = "advent-of-code-2020"
+version = "0.1.0"
+authors = ["Erich Gubler <erichdongubler@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+anyhow = "1.0.34"
+structopt = "0.3.21"
