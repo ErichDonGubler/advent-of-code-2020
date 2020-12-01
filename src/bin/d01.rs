@@ -119,5 +119,13 @@ fn d01p1_sample() {
 
 #[test]
 fn d01p1_answer() {
-    dbg!(part_1(include_str!("d01p1.txt")));
+    assert_eq!(
+        part_1(include_str!("d01.txt")).unwrap(),
+        Part1Answer {
+            e1: 1751,
+            e2: 269,
+            sum: 2020,
+            product: 471019,
+        }
+    );
 }
