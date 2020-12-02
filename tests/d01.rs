@@ -3,9 +3,6 @@ use {
     std::convert::TryFrom,
 };
 
-#[cfg(not(test))]
-compile_error!("Only `cargo test` makes sense for this program.");
-
 const SUM_TARGET: u32 = 2020;
 
 #[derive(Debug)]
@@ -186,11 +183,7 @@ fn part_2(input: &str) -> anyhow::Result<Part2Answer> {
         )
 }
 
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    const EXAMPLE: &str = "
+const EXAMPLE: &str = "
         1721
         979
         366
@@ -198,59 +191,58 @@ mod test {
         675
         1456
         ";
-    const INPUT: &str = include_str!("d01.txt");
+const INPUT: &str = include_str!("d01.txt");
 
-    #[test]
-    fn d01p1_sample() {
-        assert_eq!(
-            part_1(EXAMPLE).unwrap(),
-            Part1Answer {
-                e1: (0, 1721),
-                e2: (3, 299),
-                sum: 2020,
-                product: 514579,
-            },
-        );
-    }
+#[test]
+fn d01p1_sample() {
+    assert_eq!(
+        part_1(EXAMPLE).unwrap(),
+        Part1Answer {
+            e1: (0, 1721),
+            e2: (3, 299),
+            sum: 2020,
+            product: 514579,
+        },
+    );
+}
 
-    #[test]
-    fn d01p1_answer() {
-        assert_eq!(
-            part_1(INPUT).unwrap(),
-            Part1Answer {
-                e1: (68, 1751),
-                e2: (140, 269),
-                sum: 2020,
-                product: 471019,
-            },
-        );
-    }
+#[test]
+fn d01p1_answer() {
+    assert_eq!(
+        part_1(INPUT).unwrap(),
+        Part1Answer {
+            e1: (68, 1751),
+            e2: (140, 269),
+            sum: 2020,
+            product: 471019,
+        },
+    );
+}
 
-    #[test]
-    fn d01p2_sample() {
-        assert_eq!(
-            part_2(EXAMPLE).unwrap(),
-            Part2Answer {
-                e1: (1, 979),
-                e2: (2, 366),
-                e3: (4, 675),
-                sum: 2020,
-                product: 241861950,
-            },
-        );
-    }
+#[test]
+fn d01p2_sample() {
+    assert_eq!(
+        part_2(EXAMPLE).unwrap(),
+        Part2Answer {
+            e1: (1, 979),
+            e2: (2, 366),
+            e3: (4, 675),
+            sum: 2020,
+            product: 241861950,
+        },
+    );
+}
 
-    #[test]
-    fn d01p2_answer() {
-        assert_eq!(
-            part_2(INPUT).unwrap(),
-            Part2Answer {
-                e1: (62, 1442),
-                e2: (105, 396),
-                e3: (150, 182),
-                sum: 2020,
-                product: 103927824,
-            },
-        );
-    }
+#[test]
+fn d01p2_answer() {
+    assert_eq!(
+        part_2(INPUT).unwrap(),
+        Part2Answer {
+            e1: (62, 1442),
+            e2: (105, 396),
+            e3: (150, 182),
+            sum: 2020,
+            product: 103927824,
+        },
+    );
 }
