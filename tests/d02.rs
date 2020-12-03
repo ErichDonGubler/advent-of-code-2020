@@ -7,19 +7,64 @@ use {
     std::{borrow::Cow, convert::TryInto, ops::RangeInclusive},
 };
 
+trait PasswordPolicy
+where
+    Self: Sized,
+{
+    fn from_raw(lower: u8, upper: u8, character: char) -> anyhow::Result<Self>;
+    fn validate(&self, password: &str) -> bool;
+}
+
+/// Parses a policy-password pair of the form:
+///
+/// ```txt
+/// <lower>-<upper> <char>: <password>
+/// ```
+fn parse_policy_password_pair<T>(s: &str) -> anyhow::Result<(T, Cow<'_, str>)>
+where
+    T: PasswordPolicy,
+{
+    #[derive(Debug, Deserialize, ReParse)]
+    #[re_parse(regex = "^(?P<lower>[0-9]+)-(?P<upper>[0-9]+) (?P<character>.): (?P<password>.*)$")]
+    struct RawPasswordPolicy<'a> {
+        lower: u8,
+        upper: u8,
+        character: char,
+        password: Cow<'a, str>,
+    }
+
+    let RawPasswordPolicy {
+        character,
+        lower,
+        password,
+        upper,
+    } = s
+        .parse()
+        .context("failed to parse raw policy password pair")?;
+
+    let concrete_policy = T::from_raw(lower, upper, character)
+        .context("parse succeeded, but conversion to concrete policy failed")?;
+
+    Ok((concrete_policy, password))
+}
+
 #[derive(Debug, Eq, PartialEq)]
-struct PasswordPolicy {
+struct MisrememberedPasswordPolicy {
     range: RangeInclusive<u8>,
     character: char,
 }
 
-impl PasswordPolicy {
+impl PasswordPolicy for MisrememberedPasswordPolicy {
+    fn from_raw(lower: u8, upper: u8, character: char) -> anyhow::Result<Self> {
+        // TODO: There's some error surface not getting modeled here yet. Ew.
+        Ok(Self {
+            range: RangeInclusive::new(lower, upper),
+            character,
+        })
+    }
+
     fn validate(&self, password: &str) -> bool {
         let Self { character, range } = self;
-        println!(
-            "checking if there are {:?} {:?} characters in {:?}",
-            range, character, password,
-        );
         let count = match password
             .chars()
             .filter(|c| c == character)
@@ -38,41 +83,12 @@ impl PasswordPolicy {
     }
 }
 
-/// Parses a policy-password pair of the form:
-///
-/// ```txt
-/// <lower>-<upper> <char>: <password>
-/// ```
-fn parse_policy_password_pair(s: &str) -> anyhow::Result<(PasswordPolicy, Cow<'_, str>)> {
-    #[derive(Debug, Deserialize, ReParse)]
-    #[re_parse(regex = "^(?P<lower>[0-9]+)-(?P<upper>[0-9]+) (?P<character>.): (?P<password>.*)$")]
-    struct RawPolicyPasswordPair<'a> {
-        lower: u8,
-        upper: u8,
-        character: char,
-        password: Cow<'a, str>,
-    }
-
-    let RawPolicyPasswordPair {
-        character,
-        lower,
-        password,
-        upper,
-    } = s.parse().context("failed to parse policy password pair")?;
-
-    // RawPolicyPasswordPair::new;
-    Ok((
-        PasswordPolicy {
-            range: RangeInclusive::new(lower, upper),
-            character,
-        },
-        password,
-    ))
-}
-
-fn parse_policy_password_pairs(
+fn parse_password_policy_lines<T>(
     s: &str,
-) -> impl Iterator<Item = anyhow::Result<(PasswordPolicy, Cow<'_, str>)>> {
+) -> impl Iterator<Item = anyhow::Result<(T, Cow<'_, str>)>>
+where
+    T: PasswordPolicy,
+{
     s.lines()
         .map(|l| {
             l.strip_suffix("\r\n")
@@ -84,7 +100,7 @@ fn parse_policy_password_pairs(
 }
 
 fn part_1(s: &str) -> usize {
-    parse_policy_password_pairs(s)
+    parse_password_policy_lines::<MisrememberedPasswordPolicy>(s)
         .filter_map(|res| res.ok())
         .filter(|(pol, pw)| pol.validate(&pw))
         .count()
@@ -101,17 +117,17 @@ const INPUT: &str = include_str!("d02.txt");
 #[test]
 fn d02_p1_sample() {
     assert_eq!(
-        parse_policy_password_pairs(SAMPLE)
+        parse_password_policy_lines::<MisrememberedPasswordPolicy>(SAMPLE)
             .filter_map(|res| res.ok())
             .filter(|(pol, pw)| !pol.validate(&pw))
             .collect_tuple::<(_,)>(),
         Some(((
-            PasswordPolicy {
+            MisrememberedPasswordPolicy {
                 range: RangeInclusive::new(1, 3),
                 character: 'b',
             },
             "cdefg".into(),
-        ),))
+        ),)),
     );
     assert_eq!(part_1(SAMPLE), 2);
 }
