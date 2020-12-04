@@ -115,8 +115,8 @@ impl TobogganArea {
         {
             let height = tiles.len() / definition_width;
             ensure!(
-                logical_vert_step < height && height % logical_vert_step == 0,
-                "toboggan area height ({}) is not evenly divisible by vertical step ({})",
+                logical_vert_step < height,
+                "toboggan area height ({}) is not greater than vertical step ({})",
                 height,
                 logical_vert_step,
             );
