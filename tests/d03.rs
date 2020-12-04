@@ -128,7 +128,7 @@ impl TobogganArea {
             // NOTE(erichdongubler): I'm actually not sure if it'd be easier/faster to just
             // manipulate logical coordinates that then get translated into a single new offset,
             // instead of trying to fancily recalculate the offset like we are doing here.
-            let new_logical_vert_pos = current_logical_vert_pos + 1;
+            let new_logical_vert_pos = current_logical_vert_pos + logical_vert_step;
             let new_pos = {
                 let horiz_adjusted_pos = horiz_step.checked_add(current_pos)?;
                 let already_moved_one_logical_vert_step =
