@@ -2,7 +2,7 @@ use {
     advent_of_code_2020::parsing::lines_without_endings,
     anyhow::{anyhow, ensure, Context},
     itertools::Itertools,
-    std::iter::once,
+    std::{iter::once, num::NonZeroUsize},
 };
 
 const SAMPLE: &str = "\
@@ -35,7 +35,7 @@ struct TobogganArea {
 
 #[derive(Debug, Clone)]
 struct TobogganSlope {
-    horiz_step: usize,
+    horiz_step: NonZeroUsize,
 }
 
 impl TobogganArea {
@@ -104,6 +104,8 @@ impl TobogganArea {
             definition_width,
         } = self;
         let TobogganSlope { horiz_step } = slope;
+
+        let horiz_step = horiz_step.get();
         let logical_vert_step = 1;
 
         ensure!(
@@ -154,7 +156,9 @@ impl TobogganArea {
 
 fn part_1(s: &str) -> anyhow::Result<usize> {
     let area = TobogganArea::new(s).context("failed to parse toboggan area")?;
-    let tiles = area.iter_slope_tiles(TobogganSlope { horiz_step: 3 })?;
+    let tiles = area.iter_slope_tiles(TobogganSlope {
+        horiz_step: NonZeroUsize::new(3).unwrap(),
+    })?;
     let trees_touched = tiles
         .filter(|t| matches!(t, TobogganAreaTile::Tree))
         .count();
