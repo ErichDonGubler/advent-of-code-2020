@@ -1,4 +1,5 @@
 use {
+    advent_of_code_2020::parsing::lines_without_endings,
     anyhow::{anyhow, Context},
     itertools::Itertools,
     re_parse::ReParse,
@@ -89,12 +90,7 @@ fn parse_password_policy_lines<T>(
 where
     T: PasswordPolicy,
 {
-    s.lines()
-        .map(|l| {
-            l.strip_suffix("\r\n")
-                .or_else(|| l.strip_suffix("\n"))
-                .unwrap_or(l)
-        })
+    lines_without_endings(s)
         .filter(|l| !l.is_empty())
         .map(parse_policy_password_pair)
 }
