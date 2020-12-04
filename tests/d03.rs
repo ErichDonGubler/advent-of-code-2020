@@ -36,6 +36,7 @@ struct TobogganArea {
 #[derive(Debug, Clone)]
 struct TobogganSlope {
     horiz_step: NonZeroUsize,
+    vert_step: NonZeroUsize,
 }
 
 impl TobogganArea {
@@ -103,10 +104,13 @@ impl TobogganArea {
             ref tiles,
             definition_width,
         } = self;
-        let TobogganSlope { horiz_step } = slope;
+        let TobogganSlope {
+            horiz_step,
+            vert_step,
+        } = slope;
 
         let horiz_step = horiz_step.get();
-        let logical_vert_step = 1;
+        let logical_vert_step = vert_step.get();
 
         ensure!(
             horiz_step < definition_width,
@@ -158,6 +162,7 @@ fn part_1(s: &str) -> anyhow::Result<usize> {
     let area = TobogganArea::new(s).context("failed to parse toboggan area")?;
     let tiles = area.iter_slope_tiles(TobogganSlope {
         horiz_step: NonZeroUsize::new(3).unwrap(),
+        vert_step: NonZeroUsize::new(1).unwrap(),
     })?;
     let trees_touched = tiles
         .filter(|t| matches!(t, TobogganAreaTile::Tree))
@@ -174,4 +179,39 @@ fn d03_p1_sample() {
 #[test]
 fn d03_p1_answer() {
     assert_eq!(part_1(INPUT).unwrap(), 184);
+}
+
+fn part_2(s: &str) -> anyhow::Result<usize> {
+    let area = TobogganArea::new(s).context("failed to parse toboggan area")?;
+    [(1, 1), (3, 1), (5, 1), (7, 1), (1, 2)]
+        .iter()
+        .cloned()
+        .try_fold(
+            1,
+            |trees_encountered_product, (right, down)| -> anyhow::Result<_> {
+                let tiles = area.iter_slope_tiles(TobogganSlope {
+                    horiz_step: NonZeroUsize::new(right).unwrap(),
+                    vert_step: NonZeroUsize::new(down).unwrap(),
+                })?;
+                let trees_touched = tiles
+                    .filter(|t| matches!(t, TobogganAreaTile::Tree))
+                    .count();
+
+                let trees_encountered_product = trees_touched
+                    .checked_mul(trees_encountered_product)
+                    .context("tree product overflowed")?;
+                Ok(trees_encountered_product)
+            },
+        )
+        .context("failed to calculate tree product")
+}
+
+#[test]
+fn d03_p2_sample() {
+    assert_eq!(part_2(SAMPLE).unwrap(), 336);
+}
+
+#[test]
+fn d03_p2_answer() {
+    assert_eq!(part_2(INPUT).unwrap(), 2431272960);
 }
