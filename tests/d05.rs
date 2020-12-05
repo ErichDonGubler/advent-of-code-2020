@@ -1,8 +1,8 @@
 use {
     advent_of_code_2020::parsing::lines_without_endings,
-    anyhow::{bail, ensure},
-    std::str::FromStr,
-    ux::{u10, u3, u7},
+    anyhow::{bail, ensure, Context},
+    std::{ops::Sub, str::FromStr},
+    ux::{i11, u10, u3, u7},
 };
 
 const INPUT: &str = include_str!("d05.txt");
@@ -32,18 +32,55 @@ fn d05_p1_answer() {
     );
 }
 
+#[test]
+fn d05_p2_answer() {
+    let mut seats = lines_without_endings(INPUT)
+        .map(|l| l.parse::<SeatId>())
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap();
+
+    seats.sort();
+
+    let available_seat = seats[..]
+        .windows(2)
+        .find_map(|window| match window {
+            &[before, after] => {
+                if after - before == i11::new(2) {
+                    Some(before.checked_add(1).unwrap())
+                } else {
+                    None
+                }
+            }
+            _ => unreachable!(),
+        })
+        .context("did not find a lonely empty space")
+        .unwrap();
+
+    assert_eq!(available_seat, SeatId(u10::new(562)));
+}
+
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct SeatId(pub u10);
 
 impl SeatId {
+    const TEN_RIGHTMOST_BITS: u16 = 0x03FF;
+
     pub fn row_and_seat(self) -> (u7, u3) {
-        const U3_MASK: u16 = 0b111;
+        const THREE_RIGHTMOST_BITS: u16 = 0b111;
 
         let Self(s) = self;
         (
-            u7::new(((u16::from(s) & !U3_MASK) >> 3) as u8),
-            u3::new((u16::from(s) & U3_MASK) as u8),
+            u7::new(((u16::from(s) & !THREE_RIGHTMOST_BITS) >> 3) as u8),
+            u3::new((u16::from(s) & THREE_RIGHTMOST_BITS) as u8),
         )
+    }
+
+    pub fn checked_add(self, addend: u16) -> Option<Self> {
+        let is_within_range = |x| x & !Self::TEN_RIGHTMOST_BITS == 0;
+        u16::from(self.0)
+            .checked_add(addend)
+            .filter(|&sum| is_within_range(sum))
+            .map(|sum| SeatId(u10::new(sum)))
     }
 }
 
@@ -79,5 +116,13 @@ impl FromStr for SeatId {
             };
         }
         Ok(Self(u10::new(seat)))
+    }
+}
+
+impl Sub for SeatId {
+    type Output = i11;
+
+    fn sub(self, other: Self) -> Self::Output {
+        i11::new(u16::from(self.0) as i16 - u16::from(other.0) as i16)
     }
 }
