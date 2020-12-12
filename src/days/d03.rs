@@ -171,13 +171,13 @@ fn part_1(s: &str) -> anyhow::Result<usize> {
 }
 
 #[test]
-fn d03_p1_sample() {
+fn p1_sample() {
     // TODO: Could make this more robust with a visualizastion like in the exercise spec.
     assert_eq!(part_1(SAMPLE).unwrap(), 7);
 }
 
 #[test]
-fn d03_p1_answer() {
+fn p1_answer() {
     assert_eq!(part_1(INPUT).unwrap(), 184);
 }
 
@@ -207,11 +207,11 @@ fn part_2(s: &str) -> anyhow::Result<usize> {
 }
 
 #[test]
-fn d03_p2_sample() {
+fn p2_sample() {
     assert_eq!(part_2(SAMPLE).unwrap(), 336);
 }
 
 #[test]
-fn d03_p2_answer() {
+fn p2_answer() {
     assert_eq!(part_2(INPUT).unwrap(), 2431272960);
 }

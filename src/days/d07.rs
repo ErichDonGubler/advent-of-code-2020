@@ -24,7 +24,7 @@ dotted black bags contain no other bags.
 const INPUT: &str = include_str!("d07.txt");
 
 #[test]
-fn d07_p1_sample() {
+fn p1_sample() {
     assert_eq!(part_1(SAMPLE).unwrap(), 4);
 }
 
@@ -167,17 +167,17 @@ fn part_1(s: &str) -> anyhow::Result<usize> {
 }
 
 #[test]
-fn d07_p1_answer() {
+fn p1_answer() {
     assert_eq!(part_1(INPUT).unwrap(), 151);
 }
 
 #[test]
-fn d07_p2_sample_1() {
+fn p2_sample_1() {
     assert_eq!(part_2(SAMPLE).unwrap(), 32)
 }
 
 #[test]
-fn d07_p2_sample_2() {
+fn p2_sample_2() {
     assert_eq!(
         part_2(
             "\
@@ -223,6 +223,6 @@ fn part_2(s: &str) -> anyhow::Result<u32> {
 }
 
 #[test]
-fn d07_p2_answer() {
+fn p2_answer() {
     assert_eq!(part_2(INPUT).unwrap(), 41559);
 }

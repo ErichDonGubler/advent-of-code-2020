@@ -166,17 +166,17 @@ fn part_2(s: &str) -> anyhow::Result<usize> {
 }
 
 #[test]
-fn d04_p1_sample() {
+fn p1_sample() {
     assert_eq!(part_1(SAMPLE).unwrap(), 2);
 }
 
 #[test]
-fn d04_p1_answer() {
+fn p1_answer() {
     assert_eq!(part_1(INPUT).unwrap(), 239);
 }
 
 #[test]
-fn d04_p2_sample() {
+fn p2_sample() {
     assert!(validate_birth_year("2002"));
     assert!(!validate_birth_year("2003"));
 
@@ -252,6 +252,6 @@ iyr:2010 hgt:158cm hcl:#b6652a ecl:blu byr:1944 eyr:2021 pid:093154719
 }
 
 #[test]
-fn d04_p2_answer() {
+fn p2_answer() {
     assert_eq!(part_2(INPUT).unwrap(), 188);
 }

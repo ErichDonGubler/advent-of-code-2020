@@ -160,7 +160,7 @@ const SAMPLE: &str = "\
 const INPUT: &str = include_str!("d02.txt");
 
 #[test]
-fn d02_p1_sample() {
+fn p1_sample() {
     assert_eq!(
         parse_password_policy_lines::<MisrememberedPasswordPolicy>(SAMPLE)
             .filter_map(|res| res.ok())
@@ -178,12 +178,12 @@ fn d02_p1_sample() {
 }
 
 #[test]
-fn d02_p1_answer() {
+fn p1_answer() {
     assert_eq!(part_1(INPUT), 603);
 }
 
 #[test]
-fn d02_p2_sample() {
+fn p2_sample() {
     assert_eq!(
         parse_password_policy_lines::<ActualPasswordPolicy>(SAMPLE)
             .filter_map(|res| res.ok())
@@ -210,6 +210,6 @@ fn d02_p2_sample() {
 }
 
 #[test]
-fn d02_p2_answer() {
+fn p2_answer() {
     assert_eq!(part_2(INPUT), 404);
 }

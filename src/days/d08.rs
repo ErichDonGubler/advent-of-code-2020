@@ -20,7 +20,7 @@ acc +6
 const INPUT: &str = include_str!("d08.txt");
 
 #[test]
-fn d08_p1_sample() {
+fn p1_sample() {
     assert_eq!(part_1(SAMPLE).unwrap(), 5);
 }
 
@@ -149,7 +149,7 @@ fn part_1(s: &str) -> anyhow::Result<i32> {
 }
 
 #[test]
-fn d08_p1_answer() {
+fn p1_answer() {
     assert_eq!(part_1(INPUT).unwrap(), 1801);
 }
 
@@ -198,11 +198,11 @@ fn part_2(s: &str) -> anyhow::Result<i32> {
 }
 
 #[test]
-fn d08_p2_sample() {
+fn p2_sample() {
     assert_eq!(part_2(SAMPLE).unwrap(), 8);
 }
 
 #[test]
-fn d08_p2_answer() {
+fn p2_answer() {
     assert_eq!(part_2(INPUT).unwrap(), 2060);
 }

@@ -8,7 +8,7 @@ use {
 const INPUT: &str = include_str!("d05.txt");
 
 #[test]
-fn d05_p1_sample() {
+fn p1_sample() {
     #[track_caller]
     fn test_seat_id(s: &str, (row, seat): (u8, u8), expected_seat_id: u16) {
         let seat_id = s.parse().unwrap();
@@ -22,7 +22,7 @@ fn d05_p1_sample() {
 }
 
 #[test]
-fn d05_p1_answer() {
+fn p1_answer() {
     assert_eq!(
         lines_without_endings(INPUT)
             .map(|l| l.parse::<SeatId>().unwrap())
@@ -33,7 +33,7 @@ fn d05_p1_answer() {
 }
 
 #[test]
-fn d05_p2_answer() {
+fn p2_answer() {
     let mut seats = lines_without_endings(INPUT)
         .map(|l| l.parse::<SeatId>())
         .collect::<Result<Vec<_>, _>>()

@@ -19,7 +19,7 @@ b
 ";
 
 #[test]
-fn d06_p1_sample() {
+fn p1_sample() {
     assert_eq!(sum_of_unique_question_answer_counts(SAMPLE), 11);
 }
 
@@ -38,12 +38,12 @@ fn sum_of_unique_question_answer_counts(s: &str) -> usize {
 const INPUT: &str = include_str!("d06.txt");
 
 #[test]
-fn d06_p1_answer() {
+fn p1_answer() {
     assert_eq!(sum_of_unique_question_answer_counts(INPUT), 7128);
 }
 
 #[test]
-fn d06_p2_sample() {
+fn p2_sample() {
     assert_eq!(
         sum_of_group_individuals_who_answered_yes_in_each_group(SAMPLE),
         6
@@ -70,7 +70,7 @@ fn sum_of_group_individuals_who_answered_yes_in_each_group(s: &str) -> usize {
 }
 
 #[test]
-fn d06_p2_answer() {
+fn p2_answer() {
     assert_eq!(
         sum_of_group_individuals_who_answered_yes_in_each_group(INPUT),
         3640
