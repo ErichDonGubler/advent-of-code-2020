@@ -152,3 +152,57 @@ fn part_1(s: &str) -> anyhow::Result<i32> {
 fn d08_p1_answer() {
     assert_eq!(part_1(INPUT).unwrap(), 1801);
 }
+
+fn part_2(s: &str) -> anyhow::Result<i32> {
+    let mut instructions = parse_instructions(s)?;
+    let changes_with_interesting_results = (0..instructions.len())
+        .filter_map(|change_idx| {
+            let original = instructions[change_idx].operation;
+            let changed = match original {
+                BootCodeOperation::Accumulate => return None,
+                BootCodeOperation::NoOp => BootCodeOperation::Jump,
+                BootCodeOperation::Jump => BootCodeOperation::NoOp,
+            };
+
+            instructions[change_idx].operation = changed;
+            let mut previously_seen_inst_counters = HashSet::new();
+            let mut emulator = BootCodeEmulator::zeroed();
+            let filtered = loop {
+                let instruction_counter = emulator.instruction_counter;
+                if instruction_counter == instructions.len() {
+                    break Some(Ok((change_idx, emulator.accumulator)));
+                }
+                if !previously_seen_inst_counters.insert(instruction_counter) {
+                    break None;
+                }
+                if let Err(e) = emulator
+                    .execute_single_instruction(&instructions)
+                    .with_context(|| {
+                        anyhow!("replacing instruction {} yielded an error", change_idx)
+                    })
+                {
+                    break Some(Err(e));
+                }
+            };
+            instructions[change_idx].operation = original;
+            filtered
+        })
+        .collect::<Vec<anyhow::Result<_>>>();
+
+    Ok(changes_with_interesting_results
+        .first()
+        .unwrap()
+        .as_ref()
+        .unwrap()
+        .1)
+}
+
+#[test]
+fn d08_p2_sample() {
+    assert_eq!(part_2(SAMPLE).unwrap(), 8);
+}
+
+#[test]
+fn d08_p2_answer() {
+    assert_eq!(part_2(INPUT).unwrap(), 2060);
+}
