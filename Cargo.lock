@@ -5,6 +5,7 @@ name = "advent-of-code-2020"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "automod",
  "itertools",
  "re-parse",
  "regex",
@@ -47,6 +48,17 @@ dependencies = [
  "hermit-abi",
  "libc",
  "winapi",
+]
+
+[[package]]
+name = "automod"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0f5612d51b093aae5c215583cb1a4b45f694a9097ad742b4ab6882bff76a13fd"
+dependencies = [
+ "proc-macro2 1.0.24",
+ "quote 1.0.7",
+ "syn 1.0.53",
 ]
 
 [[package]]

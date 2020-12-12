@@ -1,5 +1,5 @@
 use {
-    advent_of_code_2020::parsing::lines_without_endings,
+    crate::parsing::lines_without_endings,
     anyhow::{anyhow, bail, Context},
     itertools::Itertools,
     std::{collections::HashSet, convert::TryInto},

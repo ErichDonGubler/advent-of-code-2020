@@ -1,5 +1,5 @@
 use {
-    advent_of_code_2020::parsing::lines_without_endings,
+    crate::parsing::lines_without_endings,
     anyhow::{bail, ensure, Context},
     std::{ops::Sub, str::FromStr},
     ux::{i11, u10, u3, u7},

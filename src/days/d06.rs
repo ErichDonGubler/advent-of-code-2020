@@ -1,4 +1,4 @@
-use {advent_of_code_2020::parsing::lines_without_endings, std::collections::HashSet};
+use {crate::parsing::lines_without_endings, std::collections::HashSet};
 
 const SAMPLE: &str = "\
 abc
