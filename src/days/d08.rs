@@ -35,8 +35,79 @@ enum BootCodeOperation {
     NoOp,
 }
 
-fn part_1(s: &str) -> anyhow::Result<i32> {
-    let instructions = lines_without_endings(s)
+#[derive(Debug)]
+struct BootCodeEmulator {
+    instruction_counter: usize,
+    accumulator: i32,
+}
+
+impl BootCodeEmulator {
+    fn zeroed() -> Self {
+        Self {
+            instruction_counter: 0,
+            accumulator: 0,
+        }
+    }
+
+    fn execute_single_instruction(
+        &mut self,
+        instructions: &[BootCodeInstruction],
+    ) -> anyhow::Result<()> {
+        (|| {
+            let Self {
+                instruction_counter,
+                accumulator,
+            } = self;
+
+            let instruction = instructions
+                .get(*instruction_counter)
+                .context("instruction counter out-of-bounds")?;
+            let increment_inst_counter = |counter: &mut usize| {
+                counter
+                    .checked_add(1)
+                    .map(|new_counter| *counter = new_counter)
+                    .context("next instruction counter increment overflows")
+            };
+            match instruction.clone() {
+                BootCodeInstruction {
+                    operation: BootCodeOperation::NoOp,
+                    argument: _,
+                } => increment_inst_counter(instruction_counter),
+                BootCodeInstruction {
+                    operation: BootCodeOperation::Jump,
+                    argument,
+                } => if argument.is_positive() {
+                    instruction_counter
+                        .checked_add(argument.try_into().unwrap())
+                        .context("jump instruction overflowed")
+                } else {
+                    instruction_counter
+                        .checked_sub(argument.checked_neg().unwrap().try_into().unwrap())
+                        .context("jump instruction underflowed")
+                }
+                .map(|new_counter| *instruction_counter = new_counter),
+                BootCodeInstruction {
+                    operation: BootCodeOperation::Accumulate,
+                    argument,
+                } => accumulator
+                    .checked_add(argument.into())
+                    .context("accumulator went out-of-range")
+                    .map(|new_acc| *accumulator = new_acc)
+                    .and_then(|()| increment_inst_counter(instruction_counter)),
+            }
+            .with_context(move || anyhow!("failed to execute instruction {:?}", instruction))
+        })()
+        .with_context(|| {
+            anyhow!(
+                "failed to execute next instruction; current state: {:?}",
+                self
+            )
+        })
+    }
+}
+
+fn parse_instructions(s: &str) -> anyhow::Result<Vec<BootCodeInstruction>> {
+    lines_without_endings(s)
         .zip(1..)
         .map(|(line, line_idx)| {
             (|| -> anyhow::Result<_> {
@@ -62,63 +133,17 @@ fn part_1(s: &str) -> anyhow::Result<i32> {
             })()
             .with_context(|| anyhow!("failed to parse line {}", line_idx))
         })
-        .collect::<Result<Vec<_>, _>>()?;
-    let mut emulator_inst_counter = 0;
-    let mut emulator_accumulator = 0i32;
+        .collect::<Result<Vec<_>, _>>()
+}
+
+fn part_1(s: &str) -> anyhow::Result<i32> {
+    let instructions = parse_instructions(s)?;
+    let mut emulator = BootCodeEmulator::zeroed();
     let mut previously_seen_inst_counters = HashSet::new();
-
-    while !previously_seen_inst_counters.contains(&emulator_inst_counter) {
-        previously_seen_inst_counters.insert(emulator_inst_counter);
-        (|| {
-            let instruction = instructions
-                .get(emulator_inst_counter)
-                .context("instruction counter out-of-bounds")?;
-            let increment_inst_counter = |counter: usize| {
-                counter
-                    .checked_add(1)
-                    .context("next instruction counter increment overflows")
-            };
-            match instruction.clone() {
-                BootCodeInstruction {
-                    operation: BootCodeOperation::NoOp,
-                    argument: _,
-                } => increment_inst_counter(emulator_inst_counter)
-                    .map(|new_counter| emulator_inst_counter = new_counter),
-                BootCodeInstruction {
-                    operation: BootCodeOperation::Jump,
-                    argument,
-                } => if argument.is_positive() {
-                    emulator_inst_counter
-                        .checked_add(argument.try_into().unwrap())
-                        .context("jump instruction overflowed")
-                } else {
-                    emulator_inst_counter
-                        .checked_sub(argument.checked_neg().unwrap().try_into().unwrap())
-                        .context("jump instruction underflowed")
-                }
-                .map(|new_counter| emulator_inst_counter = new_counter),
-                BootCodeInstruction {
-                    operation: BootCodeOperation::Accumulate,
-                    argument,
-                } => emulator_accumulator
-                    .checked_add(argument.into())
-                    .context("accumulator went out-of-range")
-                    .map(|new_acc| emulator_accumulator = new_acc)
-                    .and_then(|()| increment_inst_counter(emulator_inst_counter))
-                    .map(|new_counter| emulator_inst_counter = new_counter),
-            }
-            .with_context(move || anyhow!("failed to execute instruction {:?}", instruction))
-        })()
-        .with_context(|| {
-            anyhow!(
-                "failed to execute next instruction; current state: {{ instruction_counter: {}, accumulator: {} }}",
-                emulator_inst_counter,
-                emulator_accumulator,
-            )
-        })?;
+    while previously_seen_inst_counters.insert(emulator.instruction_counter) {
+        emulator.execute_single_instruction(&instructions)?;
     }
-
-    Ok(emulator_accumulator)
+    Ok(emulator.accumulator)
 }
 
 #[test]
