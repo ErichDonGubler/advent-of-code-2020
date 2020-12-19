@@ -1,4 +1,3 @@
-#[cfg(test)]
 pub mod days {
     automod::dir!("src/days/");
 }
