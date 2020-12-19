@@ -27,7 +27,7 @@ impl FromStr for JoltageAdapterSet {
             .collect::<anyhow::Result<Vec<_>>>()?;
         ensure!(!adapters.is_empty(), "no adapters specified");
         adapters.push(0);
-        adapters.sort();
+        adapters.sort_unstable();
 
         Ok(Self(adapters))
     }

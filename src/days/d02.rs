@@ -66,17 +66,14 @@ impl PasswordPolicy for MisrememberedPasswordPolicy {
 
     fn validate(&self, password: &str) -> bool {
         let Self { character, range } = self;
-        let count = match password
-            .chars()
-            .filter(|c| c == character)
-            .count()
-            .try_into()
-        {
+        let num_chars = password.chars().filter(|c| c == character).count();
+        let count = match num_chars.try_into() {
             Ok(c) => c,
             Err(_) => {
                 panic!(
                     "number of matching password policy characters is {} \
-                    (greater than representable by `u8`), which is unexpected"
+                    (greater than representable by `u8`), which is unexpected",
+                    num_chars,
                 )
             }
         };

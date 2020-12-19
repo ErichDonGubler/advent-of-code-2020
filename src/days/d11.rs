@@ -167,9 +167,7 @@ impl WaitingAreaMap {
             offset_from_new_x(start)..=offset_from_new_x(end)
         };
 
-        if let Some(top_adjacent_area) = offset
-            .checked_sub(width)
-            .map(|o| gather_window_with_center_at(o))
+        if let Some(top_adjacent_area) = offset.checked_sub(width).map(gather_window_with_center_at)
         {
             areas.extend(tiles[top_adjacent_area].iter().copied());
         }
@@ -183,7 +181,7 @@ impl WaitingAreaMap {
         if let Some(bottom_adjacent_area) = offset
             .checked_add(width)
             .filter(|&o| o < tiles.len())
-            .map(|o| gather_window_with_center_at(o))
+            .map(gather_window_with_center_at)
         {
             areas.extend(tiles[bottom_adjacent_area].iter().copied());
         }
@@ -457,18 +455,15 @@ impl WaitingAreaOccupantBehavior for Part1OccupantBehavior {
     }
 
     fn would_leave_seat(&mut self, prev_map: &WaitingAreaMap, tile_idx: usize) -> bool {
-        prev_map
-            .get_adjacent_tiles(tile_idx)
-            .find({
-                let mut count = 0;
-                move |tile| {
-                    if matches!(tile, WaitingAreaMapTile::Seat { occupied: true }) {
-                        count += 1;
-                    }
-                    count == 4
+        prev_map.get_adjacent_tiles(tile_idx).any({
+            let mut count = 0;
+            move |tile| {
+                if matches!(tile, WaitingAreaMapTile::Seat { occupied: true }) {
+                    count += 1;
                 }
-            })
-            .is_some()
+                count == 4
+            }
+        })
     }
 }
 
@@ -557,7 +552,6 @@ fn p2_sample() {
 
         assert_eq!(
             map.get_visible_seats(find_top_left_empty_seat(&map).unwrap())
-                .map(|occupied| occupied)
                 .collect::<Vec<_>>(),
             &[false],
         );

@@ -63,21 +63,23 @@ impl XmasEncryptedData {
             .filter_map(|(previous_values, (next_check_idx, next_check_value))| {
                 let previous_values = previous_values.iter().copied();
 
-                if previous_values
-                    .clone()
-                    .zip(1..)
-                    .any(|(augend, multiplier_start)| {
-                        previous_values
-                            .clone()
-                            .skip(multiplier_start)
-                            .find_map(|addend| {
-                                augend
-                                    .checked_add(addend)
-                                    .filter(|&sum| sum == next_check_value)
-                            })
-                            .is_some()
-                    })
-                {
+                let is_strong =
+                    previous_values
+                        .clone()
+                        .zip(1..)
+                        .any(|(augend, multiplier_start)| {
+                            previous_values
+                                .clone()
+                                .skip(multiplier_start)
+                                .find_map(|addend| {
+                                    augend
+                                        .checked_add(addend)
+                                        .filter(|&sum| sum == next_check_value)
+                                })
+                                .is_some()
+                        });
+
+                if is_strong {
                     None
                 } else {
                     Some((next_check_idx, next_check_value))

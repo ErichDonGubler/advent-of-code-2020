@@ -43,8 +43,8 @@ fn p2_answer() {
 
     let available_seat = seats[..]
         .windows(2)
-        .find_map(|window| match window {
-            &[before, after] => {
+        .find_map(|window| match *window {
+            [before, after] => {
                 if after - before == i11::new(2) {
                     Some(before.checked_add(1).unwrap())
                 } else {
