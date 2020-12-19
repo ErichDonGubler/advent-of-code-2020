@@ -5,6 +5,8 @@ name = "advent-of-code-2020"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "array_iterator",
+ "arrayvec",
  "automod",
  "itertools",
  "re-parse",
@@ -38,6 +40,18 @@ name = "anyhow"
 version = "1.0.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bf8dcb5b4bbaa28653b647d8c77bd4ed40183b48882e130c1f1ffb73de069fd7"
+
+[[package]]
+name = "array_iterator"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "74a491067192fc1d41f9105bea0d7514fd372f535c61c0b72966ddc7e9e901c8"
+
+[[package]]
+name = "arrayvec"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "23b62fc65de8e4e7f52534fb52b0f3ed04746ae267519eef2a83941e8085068b"
 
 [[package]]
 name = "atty"
